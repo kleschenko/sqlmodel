@@ -22,7 +22,6 @@ from sqlalchemy.orm._typing import OrmExecuteOptionsParameter
 from sqlalchemy.sql.base import Executable as _Executable
 from sqlalchemy.sql.dml import UpdateBase
 from sqlalchemy.util.concurrency import greenlet_spawn
-from typing_extensions import deprecated
 
 from ...orm.session import Session
 from ...sql.base import Executable
@@ -109,26 +108,6 @@ class AsyncSession(_AsyncSession):
         )
         return result_value  # type: ignore
 
-    @deprecated(
-        """
-        🚨 You probably want to use `session.exec()` instead of `session.execute()`.
-
-        This is the original SQLAlchemy `session.execute()` method that returns objects
-        of type `Row`, and that you have to call `scalars()` to get the model objects.
-
-        For example:
-
-        ```Python
-        heroes = await session.execute(select(Hero)).scalars().all()
-        ```
-
-        instead you could use `exec()`:
-
-        ```Python
-        heroes = await session.exec(select(Hero)).all()
-        ```
-        """
-    )
     async def execute(  # type: ignore
         self,
         statement: _Executable,
