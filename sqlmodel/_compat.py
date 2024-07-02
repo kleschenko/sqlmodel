@@ -5,11 +5,13 @@ from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     AbstractSet,
+    Annotated,
     Any,
     Callable,
     Dict,
     ForwardRef,
     Generator,
+    Literal,
     Mapping,
     Optional,
     Set,
@@ -194,7 +196,15 @@ if IS_PYDANTIC_V2:
             return annotation
         elif origin is Annotated:
             return get_sa_type_from_type_annotation(get_args(annotation)[0])
-        if _is_union_type(origin):
+        # Resolve Literal fields
+        if origin is Literal:
+            child_types = list({type(x) for x in get_args(annotation)})
+            if len(child_types) != 1:
+                raise RuntimeError(
+                    "Cannot have a Literal with multiple types as a SQLAlchemy field"
+                )
+            origin = child_types[0]
+        elif _is_union_type(origin):
             bases = get_args(annotation)
             if len(bases) > 2:
                 raise ValueError(
@@ -203,7 +213,7 @@ if IS_PYDANTIC_V2:
             # Non optional unions are not allowed
             if bases[0] is not NoneType and bases[1] is not NoneType:
                 raise ValueError(
-                    "Cannot have a (non-optional) union as a SQLAlchemy field"
+                    "Cannot have a (non-optional) union as a SQLlchemy field"
                 )
             # Optional unions are allowed
             use_type = bases[0] if bases[0] is not NoneType else bases[1]
